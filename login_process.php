@@ -1,42 +1,53 @@
 <?php
 include_once("session_include.php");
 
-$arrayUserInfo = array("username" => "user01","password" => "abc1234");
+$servername = "localhost";
+$username = "brightdev";
+$password = "43349690";
+$dbname = "user";
 
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
 
-echo "processing...";
-
-if(isset($_POST["login"]) && $_POST["login"] != ""){
-    if($_POST["username"]  == ""|| $_POST["password"] == "" ){
+if (isset($_POST["login"]) && $_POST["login"] != "") {
+    if ($_POST["username"]  == "" || $_POST["password"] == "") {
         echo "Missing input value.";
         exit;
     }
-    $input_username  = $_POST["username"];
-    $input_password = $_POST["password"];
+    $input_username  =  $conn->real_escape_string($_POST["username"]);
+    $input_password = $conn->real_escape_string($_POST["password"]);
+    $hashed_input_password = md5($input_password);
 
     echo "<pre>";
-    echo "username : ".$input_username;
+    echo "input username : " . $input_username;
     echo "<br>";
-    echo "password : ".$input_password;
+    echo "input password : " . $input_password;
+    echo "<br>";
     echo "<br>";
 
-    if($input_username == $arrayUserInfo["username"] && $input_password == $arrayUserInfo["password"] ){
-        $_SESSION["username"] = $arrayUserInfo["username"];
-        $_SESSION["password"] = $arrayUserInfo["password"];
-        $login_status = 1;
-        $_SESSION["login_status"] = $login_status;
-        echo "<hr>";
-        echo "Session variables are set.";
-        echo "<hr>";
-        print_r($_SESSION);
-        header("Location: login_success.php");
-        exit;
+    $sql = "SELECT username, password FROM user_info WHERE username = '{$input_username}' AND password = '{$hashed_input_password}'";
+    $result = $conn->query($sql);
+
+    if ($result->num_rows > 0) {
+        // output data of each row
+        while ($row = $result->fetch_assoc()) {
+            $username = $row["username"];
+            $password = $row["password"];
+            echo "----------------------------";
+            echo "<br>";
+            echo $username . " logged in";
+            echo "<br>";
+            echo "----------------------------";
+        }
+    } else {
+        echo "----------------------------";
+        echo "<br>";
+        echo "wrong username or password !!";
+        echo "<br>";
+        echo "----------------------------";
     }
-
-    
-
-    echo "wrong username or password!";
-}else{
+    $conn->close();
+    exit;
+} else {
     echo "Can't get result";
 }
-?>
